@@ -4,7 +4,7 @@
 ### 1. 一些静态的函数
 这些函数主要是全局作用范围的
 ```
-	/**
+    /**
      * @brief get the errocode string
      */
     static const char*  error_string(int32_t rc);
