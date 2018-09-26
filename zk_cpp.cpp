@@ -314,7 +314,13 @@ zoo_rc      zk_cpp::set_acl(const char* path, const std::vector<zoo_acl_t>& acl,
     }
     acl_v.data = acl_list;
 
-    return (zoo_rc)zoo_set_acl((zhandle_t*)m_zh, path, version, &acl_v);
+    zoo_rc rt = (zoo_rc)zoo_set_acl((zhandle_t*)m_zh, path, version, &acl_v);
+
+    if (acl_list != NULL) {
+        delete[]acl_list;
+    }
+
+    return rt;
 }
 
 zoo_rc      zk_cpp::get_acl(const char* path, std::vector<zoo_acl_t>& acl) {
