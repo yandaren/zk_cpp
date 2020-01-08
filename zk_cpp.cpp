@@ -271,13 +271,34 @@ zoo_rc      zk_cpp::get_node(const char* path, std::string& out_value, zoo_state
 
     char buf[zoo_value_buf_len] = { 0 };
     int buf_size = sizeof(buf);
-    zoo_rc rt = (zoo_rc)zoo_get((zhandle_t*)m_zh, path, watch, buf, &buf_size, &s);
-    if (rt == z_ok) {
-        out_value = std::move(std::string(buf, buf_size));
+    char *data_buffer = buf;
+    zoo_rc rt = (zoo_rc)zoo_get((zhandle_t*)m_zh, path, watch, data_buffer, &buf_size, &s);
+    do {
+        if (rt != z_ok) {
+            break;
+        }
+
+        // check data complete
+        if (s.dataLength > buf_size) {
+            data_buffer = (char*)malloc(s.dataLength + 1);
+            buf_size = s.dataLength;
+            rt = (zoo_rc)zoo_get((zhandle_t*)m_zh, path, watch, data_buffer, &buf_size, &s);
+            if (rt != z_ok) {
+                break;
+            }
+        }
+
+        out_value = std::move(std::string(data_buffer, buf_size));
+        if (info) {
+            details::state_to_zoo_state_t(s, info);
+        }
+    } while (0);
+
+    // try free buffer
+    if (data_buffer != buf) {
+        free(data_buffer);
     }
-    if (info) {
-        details::state_to_zoo_state_t(s, info);
-    }
+    
     return rt;
 }
 
